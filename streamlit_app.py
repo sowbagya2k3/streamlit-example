@@ -2,7 +2,9 @@ from collections import namedtuple
 import altair as alt
 import math
 import pandas as pd
+import pandas_profiling
 import streamlit as st
+from streamlit_pandas_profiling import st_profile_report
 
 """
 # Welcome to Streamlit!
@@ -14,25 +16,56 @@ forums](https://discuss.streamlit.io).
 
 In the meantime, below is an example of what you can do with just a few lines of code:
 """
+df=None
+def load_data():
+    global df
+    import streamlit as st
+    option=st.sidebar.selectbox("Select source data type",['csv','json','xml','xlsx'])
+    
+    if(option=='csv'):
+        uploaded_file=st.sidebar.file_uploader("upload csv file", type="csv")
+        if uploaded_file is not None:
+            df=pd.read_csv(uploaded_file)
+            st.write("total number of rows",df.size)
+            #st.dataframe(df.describe())
+          
+    elif(option=='json'):
+        uploaded_file=st.sidebar.file_uploader("upload json file", type="json")
+    elif(option=='xlsx'):
+        uploaded_file=st.sidebar.file_uploader("upload json file", type="json")
+    elif(option=='xml'):
+        uploaded_file=st.sidebar.file_uploader("upload json file", type="xml")
+    else:
+        st.sidebar.text('Please select an option to upload')
+    if df is not None:
+        selected_col=st.multiselect(label="select colums to import",options=df.columns)
+        dropna=st.checkbox("Drop NA")
+        dropDuplicate=st.checkbox("Drop Duplicates")
+        if st.button("load"):
+            df=df[selected_col]
+            if dropna:
+                df=df.dropna()
+            if dropDuplicate:
+                df=df.drop_duplicates()
+            st.dataframe(df)
+           # if 'data' not in st.session_state:
+            st.session_state.data=df
+         
+
+    
 
 
-with st.echo(code_location='below'):
-    total_points = st.slider("Number of points in spiral", 1, 5000, 2000)
-    num_turns = st.slider("Number of turns in spiral", 1, 100, 9)
+#uploaded_file=st.sidebar.file_uploader("upload xls file", type="csv")
+#df=pd.read_excel('C:/Users/91934/Downloads/data1.xls', sheet_name=1)
+#st.dataframe(df)
+#pf=df.profile_report()
+#st_profile_report(pf)
+#if uploaded_file is not None:
+ #   df=pd.read_csv(uploaded_file)
+  #  st.dataframe(df)
+   # st.write(df.describe())
+load_data()    
 
-    Point = namedtuple('Point', 'x y')
-    data = []
+   
 
-    points_per_turn = total_points / num_turns
 
-    for curr_point_num in range(total_points):
-        curr_turn, i = divmod(curr_point_num, points_per_turn)
-        angle = (curr_turn + 1) * 2 * math.pi * i / points_per_turn
-        radius = curr_point_num / total_points
-        x = radius * math.cos(angle)
-        y = radius * math.sin(angle)
-        data.append(Point(x, y))
-
-    st.altair_chart(alt.Chart(pd.DataFrame(data), height=500, width=500)
-        .mark_circle(color='#0068c9', opacity=0.5)
-        .encode(x='x:Q', y='y:Q'))
