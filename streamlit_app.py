@@ -64,6 +64,9 @@ def load_data():
  #   df=pd.read_csv(uploaded_file)
   #  st.dataframe(df)
    # st.write(df.describe())
+if 'data' in st.session_state:
+    st.dataframe(st.session_state.data)
+
 load_data()    
 
    
